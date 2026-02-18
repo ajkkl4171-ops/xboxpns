@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CONSOLE STORE MX</title>
+    <link href="https://fonts.googleapis.com/css2?family=Teko:wght@400;700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Colores Base */
+            --bg-dark: #0e0e0e;
+            --panel-bg: #1f1f1f;
+            --text-white: #ffffff;
+            
+            /* Colores PlayStation */
+            --ps-blue: #00439c;
+            --ps-light: #0070d1;
+            
+            /* Colores Xbox */
+            --xb-green: #107c10;
+            --xb-light: #2ca243;
+            
+            /* Estado actual (cambia con JS) */
+            --current-color: var(--ps-blue); 
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-white);
+            padding-bottom: 60px;
+            transition: background 0.5s;
+        }
+
+        /* --- HEADER --- */
+        header {
+            background: rgba(0,0,0,0.9);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 3px solid var(--current-color);
+            position: sticky; top: 0; z-index: 100;
+            transition: border-color 0.3s;
+        }
+
+        .logo {
+            font-family: 'Teko', sans-serif;
+            font-size: 2.2rem;
+            font-weight: bold;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        .logo span { color: var(--current-color); transition: color 0.3s; }
+
+        .controls { display: flex; gap: 20px; align-items: center; }
+
+        .wallet-pill {
+            background: #333;
+            padding: 5px 15px;
+            border-radius: 50px;
+            font-weight: bold;
+            display: flex; align-items: center; gap: 10px;
+            border: 1px solid #555;
+        }
+
+        .btn-plus {
+            background: var(--current-color); border: none; color: white;
+            width: 24px; height: 24px; border-radius: 50%;
+            cursor: pointer; font-weight: bold; display: grid; place-items: center;
+            transition: background 0.3s;
+        }
+
+        .cart-icon { font-size: 1.5rem; cursor: pointer; position: relative; }
+        .badge {
+            position: absolute; top: -5px; right: -8px;
+            background: var(--current-color); color: white;
+            font-size: 0.7rem; width: 18px; height: 18px; border-radius: 50%;
+            display: grid; place-items: center; font-weight: bold;
+            transition: background 0.3s;
+        }
+
+        /* --- PLATFORM SELECTOR --- */
+        .platform-tabs {
+            display: flex;
+            justify-content: center;
+            background: #111;
+            padding: 20px 0;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+        }
+
+        .tab {
+            padding: 15px 40px;
+            cursor: pointer;
+            font-family: 'Teko', sans-serif;
+            font-size: 1.5rem;
+            text-transform: uppercase;
+            color: #666;
+            border-bottom: 4px solid transparent;
+            transition: 0.3s;
+            width: 200px;
+            text-align: center;
+        }
+
+        .tab:hover { color: white; background: #222; }
+
+        .tab.active-ps {
+            color: white;
+            border-bottom-color: var(--ps-blue);
+            background: linear-gradient(to top, rgba(0,67,156,0.2), transparent);
+        }
+
+        .tab.active-xb {
+            color: white;
+            border-bottom-color: var(--xb-green);
+            background: linear-gradient(to top, rgba(16,124,16,0.2), transparent);
+        }
+
+        /* --- MAIN LAYOUT --- */
+        .container {
+            max-width: 1200px; margin: 0 auto; padding: 30px 20px;
+            display: flex; gap: 30px;
+        }
+
+        .grid {
+            flex: 3;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: var(--panel-bg);
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+            transition: 0.3s;
+            border: 1px solid #333;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .card:hover { transform: translateY(-5px); border-color: var(--current-color); }
+
+        .card-platform {
+            font-family: 'Teko', sans-serif;
+            font-size: 1.2rem;
+            color: #888;
+            margin-bottom: 5px;
+        }
+
+        .card-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 10px 0;
+            font-family: 'Teko', sans-serif;
+        }
+        
+        .card-price {
+            color: var(--current-color);
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            display: block;
+            transition: color 0.3s;
+        }
+
+        .btn-buy {
+            background: transparent;
+            border: 2px solid var(--current-color);
+            color: white;
+            width: 100%;
+            padding: 10px;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+            text-transform: uppercase;
+        }
+        .btn-buy:hover { background: var(--current-color); }
+
+        /* --- CART --- */
+        .sidebar {
+            flex: 1;
+            background: #181818;
+            border: 1px solid #333;
+            padding: 20px;
+            height: fit-content;
+            border-radius: 10px;
+            position: sticky; top: 100px;
+        }
+
+        .sidebar h2 { font-family: 'Teko', sans-serif; font-size: 1.8rem; margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 10px; }
+
+        .cart-items { max-height: 300px; overflow-y: auto; margin-bottom: 15px; }
+        .cart-item {
+            display: flex; justify-content: space-between; align-items: center;
+            background: #252525; padding: 10px; margin-bottom: 8px; font-size: 0.9rem;
+            border-radius: 5px;
+        }
+        .remove-btn { color: #ff4444; cursor: pointer; font-weight: bold; }
+
+        .btn-checkout {
+            background: var(--current-color);
+            color: white; width: 100%; border: none;
+            padding: 15px; font-weight: bold;
+            border-radius: 5px; cursor: pointer;
+            text-transform: uppercase;
+            transition: background 0.3s;
+        }
+
+        /* --- MODAL --- */
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); z-index: 200; justify-content: center; align-items: center;
+        }
+
+        .modal {
+            background: #222; width: 90%; max-width: 500px;
+            padding: 30px; border-radius: 10px; border: 1px solid #444;
+            position: relative; max-height: 90vh; overflow-y: auto;
+        }
+
+        .close-btn { position: absolute; top: 15px; right: 20px; color: white; cursor: pointer; font-size: 1.5rem; }
+
+        .modal h2 { font-family: 'Teko', sans-serif; margin-bottom: 20px; font-size: 2rem; }
+
+        .data-section { margin-bottom: 20px; }
+        .data-title { font-size: 0.9rem; color: #888; font-weight: bold; margin-bottom: 5px; border-bottom: 1px solid #444; padding-bottom: 2px; }
+
+        .copy-row {
+            background: #111; padding: 12px; margin-bottom: 8px;
+            border: 1px solid #333; cursor: pointer; transition: 0.2s;
+            display: flex; flex-direction: column; border-radius: 5px;
+        }
+        .copy-row:hover { border-color: white; background: #000; }
+        
+        .lbl { font-size: 0.75rem; color: var(--current-color); font-weight: bold; margin-bottom: 2px; }
+        .val { font-family: monospace; color: white; font-size: 0.85rem; word-break: break-all; }
+
+        .btn-wa {
+            display: block; width: 100%; background: #25D366; color: white;
+            text-align: center; padding: 15px; border-radius: 5px;
+            text-decoration: none; font-weight: bold; margin-top: 20px;
+        }
+
+        @media(max-width: 768px) {
+            .container { flex-direction: column; }
+            .sidebar { order: -1; margin-bottom: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo">CONSOLE<span>STORE</span></div>
+        <div class="controls">
+            <div class="wallet-pill">
+                $<span id="wallet">0.00</span>
+                <button class="btn-plus" onclick="openModal()">+</button>
+            </div>
+            <div class="cart-icon" onclick="scrollToCart()">
+                🛒 <span class="badge" id="count">0</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="platform-tabs">
+        <div class="tab active-ps" onclick="switchPlatform('ps')">PLAYSTATION</div>
+        <div class="tab" onclick="switchPlatform('xb')">XBOX</div>
+    </div>
+
+    <div class="container">
+        <div class="grid" id="grid">
+            </div>
+
+        <div class="sidebar" id="sidebar">
+            <h2>CARRITO</h2>
+            <div class="cart-items" id="cart-items">
+                <p style="color:#666; text-align:center;">Vacío</p>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-weight:bold; margin: 15px 0;">
+                <span>TOTAL:</span>
+                <span id="total">$0.00</span>
+            </div>
+            <button class="btn-checkout" onclick="pay()">PAGAR AHORA</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modal">
+        <div class="modal">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <h2>AÑADIR SALDO</h2>
+            <p style="color:#aaa; margin-bottom:15px; font-size:0.9rem;">Copia los datos con un click:</p>
+
+            <div class="data-section">
+                <div class="data-title">BANCO (MÉXICO)</div>
+                <div class="copy-row" onclick="copy('710969000152932282')">
+                    <span class="lbl">BANCO: NVIO / TITULAR: Francisco</span>
+                    <span class="val">710969000183315124</span>
+                </div>
+            </div>
+
+            <div class="data-section">
+                <div class="data-title">CRIPTOMONEDAS (WALLETS)</div>
+                
+                <div class="copy-row" onclick="copy('0xfc7c5f3ebc5e804ad020c37dc50f0e469b463913')">
+                    <span class="lbl">USDT (BP20)</span>
+                    <span class="val">0xfc7c5f3ebc5e804ad020c37dc50f0e469b463913</span>
+                </div>
+
+                <div class="copy-row" onclick="copy('TUT4ZqQYEv32oiUGC3pNmYBYEoUUGMm1eV')">
+                    <span class="lbl">USDT (TRC20)</span>
+                    <span class="val">TUT4ZqQYEv32oiUGC3pNmYBYEoUUGMm1eV</span>
+                </div>
+
+                <div class="copy-row" onclick="copy('0xfc7c5f3ebc5e804ad020c37dc50f0e469b463913')">
+                    <span class="lbl">ETHEREUM (ETH)</span>
+                    <span class="val">0xfc7c5f3ebc5e804ad020c37dc50f0e469b463913</span>
+                </div>
+
+                <div class="copy-row" onclick="copy('1K6jsMAfJJMEQ6dPmJDV7CEZfDGHhsXznw')">
+                    <span class="lbl">BITCOIN (BTC)</span>
+                    <span class="val">1K6jsMAfJJMEQ6dPmJDV7CEZfDGHhsXznw</span>
+                </div>
+
+                <div class="copy-row" onclick="copy('0xfc7c5f3ebc5e804ad020c37dc50f0e469b463913')">
+                    <span class="lbl">USDC (AVAXC)</span>
+                    <span class="val">0xfc7c5f3ebc5e804ad020c37dc50f0e469b463913</span>
+                </div>
+            </div>
+
+            <a href="#" id="wa-link" target="_blank" class="btn-wa">ENVIAR COMPROBANTE</a>
+        </div>
+    </div>
+
+    <script>
+        // --- DATOS DE PRODUCTOS ---
+        const productsPS = [
+            { id: 'p1', type: 'ps', name: '$10 USD Card', price: 100 },
+            { id: 'p2', type: 'ps', name: '$20 USD Card', price: 200 },
+            { id: 'p3', type: 'ps', name: '$25 USD Card', price: 250 },
+            { id: 'p4', type: 'ps', name: '$50 USD Card', price: 500 },
+            { id: 'p5', type: 'ps', name: '$100 USD Card', price: 950 }
+        ];
+
+        const productsXB = [
+            { id: 'x1', type: 'xb', name: '$200 MXN Saldo', price: 50 },
+            { id: 'x2', type: 'xb', name: '$400 MXN Saldo', price: 100 },
+            { id: 'x3', type: 'xb', name: '$600 MXN Saldo', price: 150 },
+            { id: 'x4', type: 'xb', name: '$1000 MXN Saldo', price: 250 },
+            { id: 'x5', type: 'xb', name: 'GamePass Ultimate 1 Mes', price: 70 }
+        ];
+
+        let currentMode = 'ps'; // ps o xb
+        let cart = [];
+        let wallet = 0.00;
+        const PHONE = "12296558023";
+
+        // --- FUNCIONES DE PLATAFORMA ---
+        function switchPlatform(mode) {
+            currentMode = mode;
+            const root = document.documentElement;
+            const tabs = document.querySelectorAll('.tab');
+
+            tabs[0].classList.remove('active-ps');
+            tabs[1].classList.remove('active-xb');
+
+            if (mode === 'ps') {
+                root.style.setProperty('--current-color', '#00439c');
+                tabs[0].classList.add('active-ps');
+                renderGrid(productsPS);
+            } else {
+                root.style.setProperty('--current-color', '#107c10');
+                tabs[1].classList.add('active-xb');
+                renderGrid(productsXB);
+            }
+        }
+
+        function renderGrid(list) {
+            const grid = document.getElementById('grid');
+            grid.innerHTML = list.map(p => `
+                <div class="card">
+                    <div class="card-platform">${p.type === 'ps' ? 'PLAYSTATION' : 'XBOX'}</div>
+                    <div class="card-value">${p.name}</div>
+                    <span class="card-price">$${p.price} MXN</span>
+                    <button class="btn-buy" onclick="add('${p.id}')">AGREGAR</button>
+                </div>
+            `).join('');
+        }
+
+        // --- LÓGICA CARRITO ---
+        function add(id) {
+            // Buscar en ambas listas
+            const item = [...productsPS, ...productsXB].find(p => p.id === id);
+            cart.push(item);
+            renderCart();
+        }
+
+        function remove(index) {
+            cart.splice(index, 1);
+            renderCart();
+        }
+
+        function renderCart() {
+            const box = document.getElementById('cart-items');
+            const totalEl = document.getElementById('total');
+            const badge = document.getElementById('count');
+            
+            badge.innerText = cart.length;
+            
+            let total = 0;
+            if (cart.length === 0) {
+                box.innerHTML = '<p style="color:#666; text-align:center;">Vacío</p>';
+                totalEl.innerText = "$0.00";
+                return;
+            }
+
+            box.innerHTML = cart.map((item, idx) => {
+                total += item.price;
+                return `
+                <div class="cart-item">
+                    <div>
+                        <strong>${item.name}</strong><br>
+                        <small style="color:#aaa;">$${item.price} MXN</small>
+                    </div>
+                    <span class="remove-btn" onclick="remove(${idx})">&times;</span>
+                </div>`;
+            }).join('');
+
+            totalEl.innerText = `$${total.toFixed(2)}`;
+        }
+
+        // --- PAGO ---
+        function pay() {
+            const total = cart.reduce((acc, item) => acc + item.price, 0);
+            if(total === 0) return alert("Carrito vacío.");
+
+            if(wallet >= total) {
+                wallet -= total;
+                document.getElementById('wallet').innerText = wallet.toFixed(2);
+                
+                let msg = "Hola, nueva compra CONSOLE STORE:\n";
+                cart.forEach(i => msg += `- ${i.name} ($${i.price})\n`);
+                msg += `Total Pagado: $${total} MXN`;
+                
+                window.open(`https://wa.me/${PHONE}?text=${encodeURIComponent(msg)}`, '_blank');
+                cart = []; renderCart();
+            } else {
+                alert("Saldo insuficiente.");
+                openModal();
+            }
+        }
+
+        // --- UTILS ---
+        function openModal() { document.getElementById('modal').style.display = 'flex'; }
+        function closeModal() { document.getElementById('modal').style.display = 'none'; }
+        
+        function copy(txt) {
+            navigator.clipboard.writeText(txt).then(() => alert("Copiado al portapapeles."));
+        }
+
+        function updateLink() {
+            const msg = "Hola, solicito recarga de saldo (Console Store). Adjunto comprobante.";
+            document.getElementById('wa-link').href = `https://wa.me/${PHONE}?text=${encodeURIComponent(msg)}`;
+        }
+
+        function scrollToCart() {
+             document.getElementById('sidebar').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // INIT
+        switchPlatform('ps'); // Inicia en PS
+        updateLink();
+
+    </script>
+</body>
+</html>
